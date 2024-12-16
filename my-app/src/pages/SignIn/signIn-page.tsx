@@ -1,56 +1,68 @@
-import MainImage from "../../assets/right-column.png";
-import Logo from "../../assets/logo.png";
-// import EyeOff from "../../assets/eye-off.png";
-import {
-  Button,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  TextField,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   FormContainer,
   InputSection,
   SignInInnerContainer,
   SignInOuterContainer,
 } from "./signIn-style";
+import MainImage from "../../assets/right-column.png";
+import Logo from "../../assets/logo.png";
+import {
+  Button,
+  Divider,
+  TextField,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../../contexts/AuthContext";
+
 export const SignInPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const { login } = useAuth();
+
+  const handleSignIn = async () => {
+    try {
+      const response = await axios.post("http://localhost:5001/api/signin", {
+        email,
+        password,
+      });
+      if (response.status === 200) {
+        login(response.data.token);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error("Sign In Error:", error);
+    }
+  };
+
   return (
     <SignInOuterContainer>
-      <SignInInnerContainer
-        sx={{
-          width: isMobile ? "100%" : "65%",
-        }}
-      >
-        <img src={Logo} style={{ marginTop: "1.5rem", marginLeft: "1.5rem" }} />
+      <SignInInnerContainer sx={{ width: isMobile ? "100%" : "65%" }}>
+        <img
+          src={Logo}
+          style={{
+            marginTop: "1.5rem",
+            marginLeft: "1.5rem",
+            position: "fixed",
+            top: "0",
+          }}
+        />
         <FormContainer>
-          <div
-            style={{
-              width: isMobile ? "calc(100% - 2rem)" : "25rem",
-            }}
-          >
-            <Typography
-              textAlign={"left"}
-              fontSize={"2.5rem"}
-              fontWeight={700}
-              letterSpacing={"-4%"}
-            >
+          <div style={{ width: isMobile ? "calc(100% - 2rem)" : "25rem" }}>
+            <Typography textAlign={"left"} fontSize={"2.5rem"} fontWeight={700}>
               Sign in
             </Typography>
-            <Typography
-              fontSize={"1.125rem"}
-              color=" #969696
-  "
-            >
+            <Typography fontSize={"1.125rem"} color="#969696">
               Please login to continue to your account.
             </Typography>
+
             <InputSection>
               <TextField
                 label="Email"
@@ -60,32 +72,26 @@ export const SignInPage = () => {
                   shrink: true,
                 }}
                 fullWidth
-              />
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />{" "}
               <TextField
-                label="OTP"
+                label="Password"
                 variant="outlined"
-                placeholder="Enter your OTP"
+                type="password"
+                placeholder="Enter your password"
                 InputLabelProps={{
                   shrink: true,
                 }}
                 fullWidth
-              />
-              <Typography
-                color=" #367AFF"
-                sx={{ cursor: "pointer", textDecoration: "underline" }}
-              >
-                Forgot Password ?
-              </Typography>
-              <FormControlLabel
-                control={<Checkbox />}
-                label="Keep me logged in"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <Button
                 variant="contained"
                 color="primary"
-                sx={{
-                  textTransform: "capitalize",
-                }}
+                sx={{ textTransform: "capitalize", marginTop: "1rem" }}
+                onClick={handleSignIn}
               >
                 Sign In
               </Button>
@@ -108,26 +114,18 @@ export const SignInPage = () => {
                   gap: "0.5rem",
                 }}
               >
-                <Typography
-                  textAlign={"center"}
-                  fontSize={"1.125rem"}
-                  color=" #6C6C6C
-  "
-                >
+                <Typography fontSize={"1.125rem"} color="#6C6C6C">
                   Need an Account ??
                 </Typography>
                 <Typography
                   fontSize={"1.125rem"}
                   color="#367AFF"
-                  onClick={() => {
-                    navigate("/signup");
-                  }}
+                  onClick={() => navigate("/signup")}
                   sx={{
                     textDecoration: "underline",
                     cursor: "pointer",
                   }}
                 >
-                  {" "}
                   Create one
                 </Typography>
               </div>
