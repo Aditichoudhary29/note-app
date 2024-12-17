@@ -28,8 +28,6 @@ exports.signUp = async (req, res) => {
   }
 };
 
-// Sign In
-
 exports.signIn = async (req, res) => {
   const { email, password } = req.body;
 
@@ -44,32 +42,15 @@ exports.signIn = async (req, res) => {
       return res.status(400).json({ message: "Invalid password!" });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    return res.status(200).json({ message: "Sign In successful!", token });
+    res.status(200).json({ message: "Sign In successful!", token });
   } catch (error) {
-    console.error("Error signing in:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Sign-in error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
-const jwt = require("jsonwebtoken");
-
-const authenticateToken = (req, res, next) => {
-  const token = req.header("Authorization")?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Access Denied!" });
-
-  try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = verified;
-    next();
-  } catch (error) {
-    res.status(400).json({ message: "Invalid Token!" });
-  }
-};
-
-module.exports = authenticateToken;

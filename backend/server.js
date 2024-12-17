@@ -2,6 +2,7 @@ const express = require("express");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const cors = require("cors");
+const noteRoutes = require("./routes/noteRoutes");
 require("dotenv").config();
 
 connectDB();
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", authRoutes);
 
+app.use("/api/notes", noteRoutes);
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

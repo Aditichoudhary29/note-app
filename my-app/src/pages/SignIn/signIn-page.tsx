@@ -17,7 +17,6 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../../contexts/AuthContext";
 
 export const SignInPage = () => {
   const navigate = useNavigate();
@@ -25,20 +24,37 @@ export const SignInPage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const { login } = useAuth();
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleSignIn = async () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!email) newErrors.email = "Email is required";
+    if (!password) newErrors.password = "Password is required";
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
     try {
       const response = await axios.post("http://localhost:5001/api/signin", {
         email,
         password,
       });
       if (response.status === 200) {
-        login(response.data.token);
+        const { token } = response.data;
+        localStorage.setItem("token", token);
         navigate("/dashboard");
       }
-    } catch (error) {
-      console.error("Sign In Error:", error);
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const serverErrors = error.response.data.message;
+        setErrors({ server: serverErrors });
+      } else {
+        console.error("Sign In Error:", error);
+      }
     }
   };
 
@@ -74,7 +90,9 @@ export const SignInPage = () => {
                 fullWidth
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-              />{" "}
+                error={!!errors.email || !!errors.server}
+                helperText={errors.email || errors.server}
+              />
               <TextField
                 label="Password"
                 variant="outlined"
@@ -86,6 +104,8 @@ export const SignInPage = () => {
                 fullWidth
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                error={!!errors.password || !!errors.server}
+                helperText={errors.password || errors.server}
               />
               <Button
                 variant="contained"

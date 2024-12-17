@@ -27,8 +27,26 @@ export const SignupPage = () => {
   const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{
+    name?: string;
+    dob?: string;
+    email?: string;
+    password?: string;
+  }>({});
 
   const handleSignUp = async () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!name) newErrors.name = "Name is required";
+    if (!dob) newErrors.dob = "Date of Birth is required";
+    if (!email) newErrors.email = "Email is required";
+    if (!password) newErrors.password = "Password is required";
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
     try {
       const response = await axios.post("http://localhost:5001/api/signup", {
         name,
@@ -37,7 +55,7 @@ export const SignupPage = () => {
         password,
       });
       if (response.status === 200) {
-        navigate("/signin");
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error("Sign Up Error:", error);
@@ -76,6 +94,8 @@ export const SignupPage = () => {
                 fullWidth
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                error={!!errors.name} // Show error if there's an error for this field
+                helperText={errors.name} // Display the error message
               />
               <TextField
                 label="Date of Birth"
@@ -87,6 +107,8 @@ export const SignupPage = () => {
                 fullWidth
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
+                error={!!errors.dob}
+                helperText={errors.dob}
               />
               <TextField
                 label="Email"
@@ -98,6 +120,8 @@ export const SignupPage = () => {
                 fullWidth
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                error={!!errors.email}
+                helperText={errors.email}
               />
               <TextField
                 label="Password"
@@ -110,6 +134,8 @@ export const SignupPage = () => {
                 fullWidth
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                error={!!errors.password}
+                helperText={errors.password}
               />
               <Button
                 variant="contained"
@@ -144,7 +170,7 @@ export const SignupPage = () => {
                 <Typography
                   fontSize={"1.125rem"}
                   color="#367AFF"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/signin")}
                   sx={{
                     textDecoration: "underline",
                     cursor: "pointer",

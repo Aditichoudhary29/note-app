@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   DashboardInnerContainer,
   DashboardOuterContainer,
@@ -13,10 +14,61 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export const DashboardPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
+  const [notes, setNotes] = useState<{ _id: string; content: string }[]>([]);
+  const [newNote, setNewNote] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/signin");
+    } else {
+      // Fetch notes on page load
+      axios
+        .get("http://localhost:5001/api/notes", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => setNotes(response.data))
+        .catch((error) => console.error("Error fetching notes:", error));
+    }
+  }, [navigate]);
+
+  const handleAddNote = () => {
+    const token = localStorage.getItem("token");
+    if (!newNote.trim()) return;
+
+    axios
+      .post(
+        "http://localhost:5001/api/notes",
+        { content: newNote },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setNotes([...notes, response.data.note]);
+        setNewNote(""); // Clear input field
+      })
+      .catch((error) => console.error("Error adding note:", error));
+  };
+
+  const handleDeleteNote = (id: any) => {
+    const token = localStorage.getItem("token");
+
+    axios
+      .delete(`http://localhost:5001/api/notes/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => {
+        setNotes(notes.filter((note) => note._id !== id));
+      })
+      .catch((error) => console.error("Error deleting note:", error));
+  };
+
   return (
     <DashboardOuterContainer>
       <TopBar>
@@ -35,23 +87,8 @@ export const DashboardPage = () => {
             Dashboard
           </Typography>
         </div>
-        <Typography
-          fontSize={"1.125rem"}
-          color="#367AFF"
-          mr={isMobile ? "3rem" : "4rem"}
-          sx={{
-            textDecoration: "underline",
-            cursor: "pointer",
-          }}
-        >
-          {" "}
-          Sign Out
-        </Typography>
       </TopBar>
       <DashboardInnerContainer>
-        {/* <IntroductionContainer>
-         
-        </IntroductionContainer> */}
         <div
           style={{
             display: "flex",
@@ -68,13 +105,12 @@ export const DashboardPage = () => {
             <Input
               multiline
               rows={7}
-              // value={inputValue}
-              // onChange={handleChange}
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
               sx={{
                 width: "100%",
                 height: "100%",
                 backgroundColor: "white",
-                alignItems: "flex-start",
                 padding: "10px",
                 backgroundImage:
                   "url('https://img.freepik.com/free-photo/sheet-paper-pen-with-blue-background_53876-41374.jpg?semt=ais_hybrid')",
@@ -83,9 +119,8 @@ export const DashboardPage = () => {
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
                 fontSize: "1.25rem",
-                border: "1px solid white",
                 borderRadius: "8px",
-                color: "white",
+                color: "black",
               }}
             />
           </Box>
@@ -93,16 +128,15 @@ export const DashboardPage = () => {
             sx={{
               width: "80%",
               color: "white",
+              marginTop: "3rem",
+              fontWeight: 600,
               backgroundImage:
                 "url('https://c889979.ssl.cf3.rackcdn.com/cgg/uploads/prod_img/2_10283_e.jpg?v=-62169984000')",
               backgroundColor: "white",
               backgroundSize: "contain",
-
-              marginTop: "3rem",
-              fontWeight: 600,
             }}
+            onClick={handleAddNote}
           >
-            {" "}
             CREATE NOTE
           </Button>
         </div>
@@ -112,10 +146,23 @@ export const DashboardPage = () => {
             fontSize={"2rem"}
             fontWeight={700}
             textAlign={"center"}
-            fontStyle={"Garamond"}
           >
             YOUR NOTES
           </Typography>
+          {notes.map((note) => (
+            <Box
+              key={note._id}
+              sx={{
+                padding: "1rem",
+                margin: "0.5rem 0",
+                backgroundColor: "white",
+                borderRadius: "8px",
+              }}
+            >
+              <Typography>{note.content}</Typography>
+              <Button onClick={() => handleDeleteNote(note._id)}>Delete</Button>
+            </Box>
+          ))}
         </RightContainer>
       </DashboardInnerContainer>
     </DashboardOuterContainer>
